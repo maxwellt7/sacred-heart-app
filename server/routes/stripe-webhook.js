@@ -23,7 +23,7 @@ import { handleSubscription, upsertContact, addTags } from '../services/ghl.js';
 const router = express.Router();
 
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
-const META_PIXEL_ID = '1917548505548972';
+const META_PIXEL_ID = '2035820893688270';
 const META_CAPI_TOKEN = process.env.META_CAPI_TOKEN || '';
 const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY || '';
 

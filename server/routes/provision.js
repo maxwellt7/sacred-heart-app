@@ -240,7 +240,7 @@ router.post('/link-clerk', (req, res) => {
  * Meta CAPI Purchase event
  */
 async function sendCapiPurchaseEvent(email, amount) {
-  const PIXEL_ID = '1917548505548972';
+  const PIXEL_ID = '2035820893688270';
   const CAPI_TOKEN = process.env.META_CAPI_TOKEN;
   if (!CAPI_TOKEN) return;
 

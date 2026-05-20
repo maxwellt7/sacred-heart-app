@@ -4,8 +4,8 @@ import crypto from 'crypto';
 const router = express.Router();
 
 // Meta CAPI config
-const PIXEL_ID = '1917548505548972';
-const CAPI_TOKEN = process.env.META_CAPI_TOKEN || 'EAAK8A6L24VQBRLqqJMhfsorJb4fZBonxr16PO1zzmkE93s7aQRhGp6EsKEXboFJaD6XtDkMkLZBMsh57NZAyCZA0rxI5Pntt2QA2poLTrRDCthgYQslNsYK22v1cq9rXJabxuZCqtY1f01QKLefL4Hhgmy9ywk2PltA77rJHXipt0PRgCbLncmEf8W4loSyt7DAZDZD';
+const PIXEL_ID = '2035820893688270';
+const CAPI_TOKEN = process.env.META_CAPI_TOKEN || '';
 const CAPI_URL = `https://graph.facebook.com/v19.0/${PIXEL_ID}/events`;
 
 // ── In-memory lead storage (persists in SQLite below) ──

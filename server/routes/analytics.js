@@ -1,6 +1,7 @@
 import express from 'express';
 import db from '../db/index.js';
 import { buildFunnelBreakdown } from '../services/funnel-breakdown.js';
+import { requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -74,8 +75,8 @@ router.post('/pageview', (req, res) => {
   }
 });
 
-// ── GET /api/analytics/overview — Main dashboard overview ──
-router.get('/overview', (req, res) => {
+// ── GET /api/analytics/overview — Main dashboard overview (admin only) ──
+router.get('/overview', requireAdmin, (req, res) => {
   try {
     const days = parseInt(req.query.days) || 30;
     const cacheKey = `overview:${days}`;
@@ -311,8 +312,8 @@ router.get('/overview', (req, res) => {
   }
 });
 
-// ── GET /api/analytics/leads — Paginated lead list ──
-router.get('/leads', (req, res) => {
+// ── GET /api/analytics/leads — Paginated lead list (admin only) ──
+router.get('/leads', requireAdmin, (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 50;
     const offset = parseInt(req.query.offset) || 0;
@@ -327,8 +328,8 @@ router.get('/leads', (req, res) => {
   }
 });
 
-// ── GET /api/analytics/users — User list with engagement data ──
-router.get('/users', (req, res) => {
+// ── GET /api/analytics/users — User list with engagement data (admin only) ──
+router.get('/users', requireAdmin, (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 50;
     const offset = parseInt(req.query.offset) || 0;

@@ -12,6 +12,7 @@ import OfflineBanner from './components/OfflineBanner';
 import SignupTracker from './components/SignupTracker';
 import AnalyticsTracker from './components/AnalyticsTracker';
 import LeadConnectorWidget from './components/LeadConnectorWidget';
+import PaywallGate from './components/PaywallGate';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Learn = lazy(() => import('./pages/Learn'));
@@ -133,7 +134,9 @@ function ClerkAppContent() {
       <SignedIn>
         <SignupTracker />
         <AuthProvider>
-          <ProtectedRoutes />
+          <PaywallGate>
+            <ProtectedRoutes />
+          </PaywallGate>
         </AuthProvider>
       </SignedIn>
       <SignedOut>

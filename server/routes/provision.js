@@ -13,27 +13,11 @@ import express from 'express';
 import db from '../db/index.js';
 import { ensureUser } from '../services/profile.js';
 import { handleSubscription, upsertContact, addTags } from '../services/ghl.js';
+import { isAdminEmail } from '../middleware/auth.js';
 
 const router = express.Router();
 
 const PROVISION_SECRET = process.env.PROVISION_SECRET || '';
-
-// Admin emails/domains that always have full access
-const ADMIN_EMAILS = [
-  'maxwellmayes@gmail.com',
-  'maxwell@sovereignty.app',
-  'max@maxwellmayes.com',
-];
-const ADMIN_DOMAINS = ['sovereignty.app', 'maxwellmayes.com'];
-
-function isAdminEmail(email) {
-  if (!email) return false;
-  const lower = email.toLowerCase().trim();
-  if (ADMIN_EMAILS.some(e => e.toLowerCase() === lower)) return true;
-  const domain = lower.split('@')[1];
-  if (domain && ADMIN_DOMAINS.some(d => d === domain)) return true;
-  return false;
-}
 
 // Ensure paid_users table exists
 try {

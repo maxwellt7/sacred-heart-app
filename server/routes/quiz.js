@@ -1,5 +1,6 @@
 import express from 'express';
 import crypto from 'crypto';
+import { requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -161,8 +162,8 @@ router.post('/event', async (req, res) => {
   }
 });
 
-// ── GET /api/quiz/leads — List leads (for admin) ──
-router.get('/leads', (req, res) => {
+// ── GET /api/quiz/leads — List leads (admin only) ──
+router.get('/leads', requireAdmin, (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 100;
     const offset = parseInt(req.query.offset) || 0;

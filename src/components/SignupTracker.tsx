@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useUser } from '@clerk/clerk-react';
+import { useUser, useAuth } from '@clerk/clerk-react';
 import { trackCompleteRegistration, sendServerEvent } from '../utils/pixel';
 
 const STORAGE_KEY = 'ae_signup_tracked';
@@ -13,6 +13,7 @@ const STORAGE_KEY = 'ae_signup_tracked';
  */
 export default function SignupTracker() {
   const { user, isLoaded } = useUser();
+  const { getToken } = useAuth();
 
   useEffect(() => {
     if (!isLoaded || !user) return;
@@ -38,24 +39,34 @@ export default function SignupTracker() {
         sourceUrl: window.location.href,
       });
 
-      // Push signup to GoHighLevel CRM
+      // Push signup to GoHighLevel CRM (signed-in users only; backend requires Clerk JWT)
       const BASE = (import.meta.env.VITE_API_URL || '') + '/api';
-      fetch(`${BASE}/ghl/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: user.primaryEmailAddress?.emailAddress,
-          clerkUserId: user.id,
-          name: [user.firstName, user.lastName].filter(Boolean).join(' ') || undefined,
-        }),
-      }).catch(() => { /* silent */ });
+      (async () => {
+        try {
+          const token = await getToken();
+          await fetch(`${BASE}/ghl/signup`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({
+              email: user.primaryEmailAddress?.emailAddress,
+              clerkUserId: user.id,
+              name: [user.firstName, user.lastName].filter(Boolean).join(' ') || undefined,
+            }),
+          });
+        } catch {
+          /* silent — non-blocking */
+        }
+      })();
 
       console.log('[Pixel] CompleteRegistration fired for new signup:', user.id);
     }
 
     // Mark as tracked regardless (so returning users never re-fire)
     localStorage.setItem(STORAGE_KEY, user.id);
-  }, [isLoaded, user]);
+  }, [isLoaded, user, getToken]);
 
   return null;
 }

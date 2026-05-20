@@ -177,11 +177,24 @@ export function useAccessGate(): AccessState {
         }
       } catch (err) {
         console.error('[AccessGate] Check failed:', err);
-        // On error, default to allowing access (fail open for better UX)
+
+        // On error, prefer last-known cached state (even if stale) so that
+        // paid users aren't locked out by a transient backend hiccup. If we
+        // have no prior knowledge of this user's access, fail CLOSED so
+        // non-paying users can't bypass the gate by knocking out the API.
+        if (cached) {
+          try {
+            const { data } = JSON.parse(cached);
+            setState({ ...data, loading: false, status: 'error-stale-cache' });
+            return;
+          } catch {
+            // fall through to fail-closed
+          }
+        }
         setState({
-          hasAccess: true,
+          hasAccess: false,
           loading: false,
-          status: 'error-fallback',
+          status: 'error',
           plan: null,
           purchaseUrl: 'https://start.sovereignty.app',
         });

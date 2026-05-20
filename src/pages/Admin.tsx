@@ -81,7 +81,7 @@ interface UserData {
 
 export default function Admin() {
   const { user, isLoaded: isUserLoaded } = useUser();
-  const { isLoaded: isAuthLoaded } = useAuth();
+  const { isLoaded: isAuthLoaded, getToken } = useAuth();
   const [overview, setOverview] = useState<OverviewData | null>(null);
   const [leads, setLeads] = useState<LeadData[]>([]);
   const [users, setUsers] = useState<UserData[]>([]);
@@ -102,47 +102,54 @@ export default function Admin() {
   );
   const isStillLoading = !isUserLoaded || !isAuthLoaded;
 
+  const authedFetch = useCallback(async (url: string) => {
+    const token = await getToken();
+    return fetch(url, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  }, [getToken]);
+
   const fetchOverview = useCallback(async () => {
     try {
-      const res = await fetch(`${BASE}/analytics/overview?days=${days}`);
+      const res = await authedFetch(`${BASE}/analytics/overview?days=${days}`);
       const data = await res.json();
       setOverview(data);
     } catch (err) {
       console.error('Failed to load overview:', err);
     }
-  }, [days]);
+  }, [days, authedFetch]);
 
   const fetchLeads = useCallback(async () => {
     try {
-      const res = await fetch(`${BASE}/analytics/leads?limit=100`);
+      const res = await authedFetch(`${BASE}/analytics/leads?limit=100`);
       const data = await res.json();
       setLeads(data.leads || []);
       setLeadsTotal(data.total || 0);
     } catch (err) {
       console.error('Failed to load leads:', err);
     }
-  }, []);
+  }, [authedFetch]);
 
   const fetchUsers = useCallback(async () => {
     try {
-      const res = await fetch(`${BASE}/analytics/users?limit=100`);
+      const res = await authedFetch(`${BASE}/analytics/users?limit=100`);
       const data = await res.json();
       setUsers(data.users || []);
       setUsersTotal(data.total || 0);
     } catch (err) {
       console.error('Failed to load users:', err);
     }
-  }, []);
+  }, [authedFetch]);
 
   const fetchGhlStatus = useCallback(async () => {
     try {
-      const res = await fetch(`${BASE}/ghl/status`);
+      const res = await authedFetch(`${BASE}/ghl/status`);
       const data = await res.json();
       setGhlStatus(data);
     } catch {
       setGhlStatus({ configured: false });
     }
-  }, []);
+  }, [authedFetch]);
 
   useEffect(() => {
     if (!isAdmin) return;

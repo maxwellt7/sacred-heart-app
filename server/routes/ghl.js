@@ -9,11 +9,13 @@ import {
   isConfigured,
 } from '../services/ghl.js';
 import { registerTrialSignup, triggerWinBack } from '../services/emailScheduler.js';
+import { requireAuth, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // ── POST /api/ghl/quiz-lead — Push quiz lead to GHL ──
-router.post('/quiz-lead', async (req, res) => {
+// Admin-only: the public quiz funnel uses /api/quiz/lead instead.
+router.post('/quiz-lead', requireAdmin, async (req, res) => {
   try {
     const { email, name, score, tier, answers } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
@@ -27,7 +29,8 @@ router.post('/quiz-lead', async (req, res) => {
 });
 
 // ── POST /api/ghl/signup — Push signup to GHL ──
-router.post('/signup', async (req, res) => {
+// Signed-in user only (called by SignupTracker on first dashboard load).
+router.post('/signup', requireAuth, async (req, res) => {
   try {
     const { email, clerkUserId, name } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
@@ -41,7 +44,7 @@ router.post('/signup', async (req, res) => {
 });
 
 // ── POST /api/ghl/subscription — Push subscription to GHL ──
-router.post('/subscription', async (req, res) => {
+router.post('/subscription', requireAdmin, async (req, res) => {
   try {
     const { email, plan, amount } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
@@ -55,7 +58,7 @@ router.post('/subscription', async (req, res) => {
 });
 
 // ── POST /api/ghl/churn — Push churn to GHL ──
-router.post('/churn', async (req, res) => {
+router.post('/churn', requireAdmin, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
@@ -69,7 +72,7 @@ router.post('/churn', async (req, res) => {
 });
 
 // ── POST /api/ghl/engagement — Update engagement metrics ──
-router.post('/engagement', async (req, res) => {
+router.post('/engagement', requireAdmin, async (req, res) => {
   try {
     const { email, sessionsCompleted, lastActiveDate } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
@@ -83,7 +86,7 @@ router.post('/engagement', async (req, res) => {
 });
 
 // ── GET /api/ghl/status — Check GHL integration status ──
-router.get('/status', (req, res) => {
+router.get('/status', requireAdmin, (req, res) => {
   res.json({
     configured: isConfigured(),
     locationId: process.env.GHL_LOCATION_ID || '5aJWX4BRf7medN5RImNo',

@@ -5,12 +5,22 @@
 
 export function extractReplyField(text) {
   if (typeof text !== 'string') return '';
-  const match = text.match(/"reply"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+  // Normal case: a fully-formed "reply": "..." string with a closing quote.
+  let match = text.match(/"reply"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+  // Truncation fallback: max_tokens cut the response off mid-reply, so there
+  // is no closing quote. Capture from the opening quote to end-of-string,
+  // tolerating a dangling backslash (a half-written escape) so the trailing
+  // partial escape doesn't block the match. Without this, a truncated blob
+  // leaks raw JSON into the chat.
+  if (!match) {
+    match = text.match(/"reply"\s*:\s*"((?:[^"\\]|\\.)*)\\?$/);
+  }
   if (!match) return '';
+  const raw = match[1];
   try {
-    return JSON.parse(`"${match[1]}"`);
+    return JSON.parse(`"${raw}"`);
   } catch {
-    return match[1]
+    return raw
       .replace(/\\n/g, '\n')
       .replace(/\\"/g, '"')
       .replace(/\\\\/g, '\\');
@@ -40,6 +50,21 @@ export function sanitizeAssistantContent(content) {
     return recovered;
   }
   return content;
+}
+
+// Derives a chat-safe assistant message from a model response. Prefers an
+// already-parsed reply, falls back to extracting/healing the raw text, and
+// returns '' when nothing usable can be salvaged — signalling the caller to
+// surface an error instead of persisting a raw JSON blob into the chat.
+export function recoverChatReply(text, parsedReply) {
+  if (typeof parsedReply === 'string' && parsedReply.trim() && !looksLikeRawJson(parsedReply)) {
+    return parsedReply;
+  }
+  const cleaned = sanitizeAssistantContent(typeof text === 'string' ? text : '');
+  if (typeof cleaned === 'string' && cleaned.trim() && !looksLikeRawJson(cleaned)) {
+    return cleaned;
+  }
+  return '';
 }
 
 export function sanitizeMessageHistory(list = []) {

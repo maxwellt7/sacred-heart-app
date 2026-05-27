@@ -38,6 +38,7 @@ import {
   extractReplyField,
   extractReadyFlag,
   looksLikeRawJson,
+  recoverChatReply,
   sanitizeAssistantContent,
   sanitizeMessageHistory,
 } from '../services/message-sanitizer.js';
@@ -249,22 +250,28 @@ router.post('/init', async (req, res) => {
     const systemPrompt = await buildSystemPrompt(userId, 'coaching');
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 512,
+      max_tokens: 1024,
       system: systemPrompt + '\n\nThis is the START of a new session. The user just opened the app. Generate your opening message — greet them naturally, reference any relevant context from past sessions, and ask your first coaching question. Do NOT wait for them to speak first. Respond in the COACHING JSON format.',
       messages: [
         { role: 'user', content: session.session_type === 'general_chat' ? '[SESSION_START] The user has opened a general coaching conversation.' : '[SESSION_START] The user has opened the app for their daily hypnosis session.' }
       ],
     });
 
-    const text = response.content[0].text;
-    let parsed;
-    try {
-      parsed = parseJsonResponse(text);
-    } catch {
-      parsed = { reply: text, readyToGenerate: false, profileUpdates: {} };
+    const text = response?.content?.[0]?.text || '';
+    const parsed = tryParseChatJson(text);
+
+    // Derive a chat-safe opening message. recoverChatReply prefers a clean
+    // parsed reply, heals truncated JSON, and returns '' when only an
+    // unusable blob remains — so we never persist raw JSON into the session
+    // (the bug that left a locked session showing `{"reply": "Maxwell,`).
+    const openingMessage = recoverChatReply(text, parsed?.reply);
+    if (!openingMessage) {
+      console.error('[hypnosis/init] Unrecoverable opening response, len=%d, stop_reason=%s', text.length, response?.stop_reason);
+      return res.status(502).json({
+        error: 'I had trouble starting your session. Please try again.',
+      });
     }
 
-    const openingMessage = parsed.reply || text;
     updateSessionMessages(session.id, [
       { role: 'assistant', content: openingMessage }
     ]);

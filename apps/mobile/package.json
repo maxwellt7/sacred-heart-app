@@ -35,7 +35,13 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "doctor": "expo-doctor"
+    "doctor": "npx expo-doctor",
+    "eas:build:ios:preview": "npx eas-cli build --platform ios --profile preview",
+    "eas:build:android:preview": "npx eas-cli build --platform android --profile preview",
+    "eas:build:ios:production": "npx eas-cli build --platform ios --profile production",
+    "eas:build:android:production": "npx eas-cli build --platform android --profile production",
+    "eas:submit:ios:production": "npx eas-cli submit --platform ios --profile production",
+    "eas:submit:android:production": "npx eas-cli submit --platform android --profile production"
   },
   "expo": {
     "doctor": {

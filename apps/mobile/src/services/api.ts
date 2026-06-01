@@ -61,15 +61,22 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  // Profile and session history
   getProfile: () => request<any>('/profile'),
-  getGamificationSummary: () => request<any>('/gamification/summary'),
-  getModules: () => request<any>('/learn/modules'),
-  getReference: () => request<any>('/learn/reference'),
-  listScripts: () => request<any>('/audio/scripts'),
+  updateProfile: (data: any) =>
+    request<any>('/profile', { method: 'PUT', body: JSON.stringify(data) }),
   getSessions: (limit = 30, offset = 0) =>
     request<any>(`/profile/sessions?limit=${limit}&offset=${offset}`),
-  getIdentity: () => request<any>('/identity'),
-  getAudioUrl: (filename: string) => `${BASE}/audio/audio/${filename}`,
+  getSession: (sessionId: string) =>
+    request<any>(`/profile/sessions/${sessionId}`),
+  rateSession: (sessionId: string, rating: number, feedback?: string) =>
+    request<any>(`/profile/sessions/${sessionId}/rate`, {
+      method: 'POST',
+      body: JSON.stringify({ rating, feedback }),
+    }),
+  getStreak: () => request<any>('/profile/streak'),
+
+  // Coaching and hypnosis
   hypnosisInit: (options?: { sessionId?: string; sessionType?: string; forceNew?: boolean; title?: string }) =>
     request<any>('/hypnosis/init', { method: 'POST', body: JSON.stringify(options ?? {}) }),
   hypnosisChat: (messages: any[], sessionId?: string, moodBefore?: number, sessionType?: string, title?: string) =>
@@ -89,6 +96,50 @@ export const api = {
       result?: any;
       error?: string;
     }>(`/hypnosis/generate-status/${encodeURIComponent(jobId)}`),
+  hypnosisGetActiveJob: (sessionId: string) =>
+    request<{ jobId: string | null; status?: 'queued' | 'running' }>(
+      `/hypnosis/generate-active/${encodeURIComponent(sessionId)}`,
+    ),
+
+  // Learn
+  getModules: () => request<any>('/learn/modules'),
+  getLesson: (lessonId: string) => request<any>(`/learn/lesson/${lessonId}`),
+  generateQuiz: (lessonId: string) =>
+    request<any>('/learn/quiz', { method: 'POST', body: JSON.stringify({ lessonId }) }),
+  evaluateQuiz: (lessonId: string, questions: any[], userAnswers: any[]) =>
+    request<any>('/learn/quiz/evaluate', {
+      method: 'POST',
+      body: JSON.stringify({ lessonId, questions, userAnswers }),
+    }),
+
+  // Practice
+  sendMessage: (scenario: string, messages: any[], coached: boolean, scenarioSetup?: string) => {
+    const conversationHistory = messages.slice(0, -1);
+    const message = messages.length > 0 ? messages[messages.length - 1].content : '';
+    return request<any>('/practice/chat', {
+      method: 'POST',
+      body: JSON.stringify({ scenario, message, conversationHistory, coached, customSetup: scenarioSetup }),
+    });
+  },
+  getDebrief: (scenario: string, messages: any[]) =>
+    request<any>('/practice/debrief', {
+      method: 'POST',
+      body: JSON.stringify({ scenario, conversationHistory: messages }),
+    }),
+
+  // Audio and scripts
+  listScripts: () => request<any>('/audio/scripts'),
+  listVoices: () => request<any>('/audio/voices'),
+  saveScript: (script: { title: string; duration: string; estimatedMinutes: number; script: string }) =>
+    request<any>('/audio/scripts', { method: 'POST', body: JSON.stringify(script) }),
+  audioGenerateStart: (scriptId: string, musicTrack?: string, musicVolume?: number, voiceId?: string) =>
+    request<{ jobId: string; status: 'queued' | 'running' | 'complete' | 'failed' }>(
+      `/audio/generate-audio/${scriptId}`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ musicTrack, musicVolume, voiceId }),
+      },
+    ),
   audioGenerateStatus: (jobId: string) =>
     request<{
       jobId: string;
@@ -96,4 +147,30 @@ export const api = {
       result?: any;
       error?: string;
     }>(`/audio/audio-status/${encodeURIComponent(jobId)}`),
+  audioGetActiveJob: (scriptId: string) =>
+    request<{ jobId: string | null; status?: 'queued' | 'running' }>(
+      `/audio/audio-active/${encodeURIComponent(scriptId)}`,
+    ),
+  listMusic: () => request<any>('/audio/music'),
+  deleteScript: (scriptId: string) =>
+    request<any>(`/audio/scripts/${scriptId}`, { method: 'DELETE' }),
+  getAudioUrl: (filename: string) => `${BASE}/audio/audio/${filename}`,
+
+  // Identity and values
+  getIdentity: () => request<any>('/identity'),
+  getValueEvidence: (valueName: string) =>
+    request<any>(`/identity/values/${encodeURIComponent(valueName)}/evidence`),
+
+  // Reference
+  getReference: () => request<any>('/learn/reference'),
+
+  // Gamification
+  getXp: () => request<any>('/gamification/xp'),
+  getXpHistory: (limit = 20) => request<any>(`/gamification/xp/history?limit=${limit}`),
+  getMysteryBoxes: (limit = 20) => request<any>(`/gamification/mystery-boxes?limit=${limit}`),
+  getUnopenedBoxes: () => request<any>('/gamification/mystery-boxes/unopened'),
+  openMysteryBox: (boxId: string) =>
+    request<any>(`/gamification/mystery-boxes/${boxId}/open`, { method: 'POST' }),
+  getAchievements: () => request<any>('/gamification/achievements'),
+  getGamificationSummary: () => request<any>('/gamification/summary'),
 };

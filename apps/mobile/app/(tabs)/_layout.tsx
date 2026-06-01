@@ -1,8 +1,10 @@
 import { Redirect, Tabs } from 'expo-router';
-import { SignedIn, SignedOut } from '@clerk/clerk-expo';
+import { SignedIn, SignedOut, useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { env } from '../../src/config/env';
 import { AuthTokenProvider } from '../../src/providers/AuthTokenProvider';
+import { useAccessGate } from '../../src/hooks/useAccessGate';
 
 function TabsNavigator() {
   return (
@@ -54,6 +56,42 @@ function TabsNavigator() {
   );
 }
 
+function AccessGate() {
+  const { user } = useUser();
+  const primaryEmail = user?.emailAddresses?.[0]?.emailAddress ?? null;
+  const { loading, hasAccess, openPurchase, refresh } = useAccessGate({
+    userId: user?.id,
+    email: primaryEmail,
+  });
+
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator color="#D4A853" size="large" />
+      </View>
+    );
+  }
+
+  if (!hasAccess) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.title}>Upgrade Required</Text>
+        <Text style={styles.copy}>
+          This mobile app is linked to paid account access. Upgrade on web and then return here.
+        </Text>
+        <Pressable style={styles.primaryButton} onPress={openPurchase}>
+          <Text style={styles.primaryButtonText}>Open Checkout</Text>
+        </Pressable>
+        <Pressable style={styles.secondaryButton} onPress={refresh}>
+          <Text style={styles.secondaryButtonText}>I upgraded, refresh access</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  return <TabsNavigator />;
+}
+
 export default function TabsLayout() {
   if (!env.clerkPublishableKey) {
     return <TabsNavigator />;
@@ -63,7 +101,7 @@ export default function TabsLayout() {
     <>
       <SignedIn>
         <AuthTokenProvider>
-          <TabsNavigator />
+          <AccessGate />
         </AuthTokenProvider>
       </SignedIn>
       <SignedOut>
@@ -72,3 +110,46 @@ export default function TabsLayout() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0B0F19',
+    paddingHorizontal: 24,
+    gap: 12,
+  },
+  title: {
+    color: '#F8FAFC',
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  copy: {
+    color: '#94A3B8',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  primaryButton: {
+    marginTop: 10,
+    backgroundColor: '#D4A853',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  primaryButtonText: {
+    color: '#0B0F19',
+    fontWeight: '700',
+  },
+  secondaryButton: {
+    borderColor: '#334155',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  secondaryButtonText: {
+    color: '#CBD5E1',
+    fontWeight: '600',
+  },
+});

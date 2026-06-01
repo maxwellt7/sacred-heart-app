@@ -19,6 +19,7 @@ function RootNavigator() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="sign-in" options={{ title: 'Sign In' }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="learn/[lessonId]" options={{ title: 'Lesson' }} />
         <Stack.Screen name="audios" options={{ title: 'Audios' }} />
         <Stack.Screen name="sessions" options={{ title: 'Sessions' }} />
         <Stack.Screen name="insights" options={{ title: 'Insights' }} />

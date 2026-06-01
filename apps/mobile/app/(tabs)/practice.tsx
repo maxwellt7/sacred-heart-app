@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../../src/services/api';
+import { useProgress } from '../../src/hooks/useProgress';
 import { InlineError } from '../../src/ui/states';
 import { OfflineBanner } from '../../src/ui/OfflineBanner';
 import { colors } from '../../src/ui/theme';
@@ -62,6 +63,7 @@ export default function PracticeScreen() {
   const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const listRef = useRef<FlatList<Message>>(null);
+  const { recordPracticeSession } = useProgress();
 
   const startSession = async () => {
     if (!scenario) return;
@@ -139,8 +141,9 @@ export default function PracticeScreen() {
       const apiMessages = messages.map((m) => ({ role: m.role, content: m.content }));
       const result = await api.getDebrief(scenario, apiMessages);
       setDebrief(result.debrief || result);
+      recordPracticeSession(scenario);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate debrief.');
+      setError(err instanceof Error ? err.message : 'Failed to generate debrief. Your session was still recorded.');
     } finally {
       setLoading(false);
     }

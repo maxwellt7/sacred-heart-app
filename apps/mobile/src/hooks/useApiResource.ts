@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNetwork } from './useNetwork';
 
 type ResourceState<T> = {
   data: T | null;
@@ -23,6 +24,10 @@ export function useApiResource<T>(fetcher: () => Promise<T>, deps: ReadonlyArray
   const fetcherRef = useRef(fetcher);
   fetcherRef.current = fetcher;
   const mountedRef = useRef(true);
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const { isOffline } = useNetwork();
+  const wasOfflineRef = useRef(isOffline);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -60,6 +65,15 @@ export function useApiResource<T>(fetcher: () => Promise<T>, deps: ReadonlyArray
   useEffect(() => {
     load('initial').catch(() => undefined);
   }, [load]);
+
+  // Auto-recover when connectivity returns after a failed/empty load.
+  useEffect(() => {
+    const cameBackOnline = wasOfflineRef.current && !isOffline;
+    wasOfflineRef.current = isOffline;
+    if (cameBackOnline && (stateRef.current.error || stateRef.current.data === null)) {
+      load('initial').catch(() => undefined);
+    }
+  }, [isOffline, load]);
 
   const refresh = useCallback(() => load('refresh'), [load]);
   const retry = useCallback(() => load('initial'), [load]);

@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import { api } from '../../src/services/api';
+import { OfflineBanner } from '../../src/ui/OfflineBanner';
 
 type ChatMessage = {
   id: string;
@@ -193,6 +194,7 @@ export default function HypnosisScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <OfflineBanner />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

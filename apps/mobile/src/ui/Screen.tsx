@@ -1,5 +1,6 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { OfflineBanner } from './OfflineBanner';
 
 type ScreenProps = {
   title: string;
@@ -9,7 +10,8 @@ type ScreenProps = {
 
 export function Screen({ title, subtitle, children }: ScreenProps) {
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <OfflineBanner />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}

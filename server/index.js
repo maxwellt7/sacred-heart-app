@@ -14,6 +14,7 @@ import quizRoutes from './routes/quiz.js';
 import ghlRoutes from './routes/ghl.js';
 import analyticsRoutes from './routes/analytics.js';
 import provisionRoutes from './routes/provision.js';
+import adminKbRoutes from './routes/admin-kb.js';
 import stripeWebhookRoutes from './routes/stripe-webhook.js';
 import { ensureDefaultUser, ensureUser } from './services/profile.js';
 import { initKnowledgeBaseScheduler } from './services/knowledge-base-scheduler.js';
@@ -257,6 +258,7 @@ app.use('/api/quiz', quizRoutes);
 app.use('/api/ghl', ghlRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/provision-access', provisionRoutes);
+app.use('/api/admin', adminKbRoutes);
 
 // Global error handler
 app.use((err, req, res, _next) => {

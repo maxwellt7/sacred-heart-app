@@ -24,32 +24,13 @@ test('buildRuntimeHealthPayload reports commit, auth state, and OpenAI fallback 
       openAiFallbackModel: 'gpt-4.1-mini',
       geminiConfigured: false,
       geminiFallbackModel: 'gemini-2.5-flash',
-      llamaConfigured: false,
-      llamaFallbackModel: 'meta-llama/Llama-3.3-70B-Instruct-Turbo',
-      llamaBaseUrl: 'https://api.together.xyz/v1',
       pineconeEnabled: false,
       pineconeIndex: null,
       dropboxConfigured: false,
+      dropboxAuthMode: 'unconfigured',
       dropboxFolder: null,
     },
   });
-});
-
-test('buildRuntimeHealthPayload reports Llama fallback readiness when LLAMA_API_KEY is set', async () => {
-  const mod = await import('./runtime-health.js');
-
-  const payload = mod.buildRuntimeHealthPayload({
-    clerkEnabled: true,
-    env: {
-      LLAMA_API_KEY: 'tgr-test-key',
-      LLAMA_MODEL: 'meta-llama/Llama-3.3-70B-Instruct-Turbo',
-      LLAMA_BASE_URL: 'https://api.groq.com/openai/v1',
-    },
-  });
-
-  assert.equal(payload.runtime.llamaConfigured, true);
-  assert.equal(payload.runtime.llamaFallbackModel, 'meta-llama/Llama-3.3-70B-Instruct-Turbo');
-  assert.equal(payload.runtime.llamaBaseUrl, 'https://api.groq.com/openai/v1');
 });
 
 test('buildRuntimeHealthPayload reports Gemini fallback readiness when GEMINI_API_KEY is set', async () => {
@@ -65,6 +46,27 @@ test('buildRuntimeHealthPayload reports Gemini fallback readiness when GEMINI_AP
 
   assert.equal(payload.runtime.geminiConfigured, true);
   assert.equal(payload.runtime.geminiFallbackModel, 'gemini-2.5-flash');
+});
+
+test('buildRuntimeHealthPayload reports Dropbox configured (refresh-token flow) and surfaces the watched folder', async () => {
+  const mod = await import('./runtime-health.js');
+
+  const payload = mod.buildRuntimeHealthPayload({
+    clerkEnabled: true,
+    env: {
+      DROPBOX_REFRESH_TOKEN: 'rt-xxx',
+      DROPBOX_APP_KEY: 'ak-xxx',
+      DROPBOX_APP_SECRET: 'as-xxx',
+      DROPBOX_KNOWLEDGE_FOLDER: '/01. Professional/AI Tools/Sacred Heart/wlu coaching',
+    },
+  });
+
+  assert.equal(payload.runtime.dropboxConfigured, true);
+  assert.equal(payload.runtime.dropboxAuthMode, 'refresh_token');
+  assert.equal(
+    payload.runtime.dropboxFolder,
+    '/01. Professional/AI Tools/Sacred Heart/wlu coaching'
+  );
 });
 
 test('buildRuntimeHealthPayload omits false confidence when commit or OpenAI key are missing', async () => {
@@ -84,12 +86,10 @@ test('buildRuntimeHealthPayload omits false confidence when commit or OpenAI key
       openAiFallbackModel: 'gpt-4.1-mini',
       geminiConfigured: false,
       geminiFallbackModel: 'gemini-2.5-flash',
-      llamaConfigured: false,
-      llamaFallbackModel: 'meta-llama/Llama-3.3-70B-Instruct-Turbo',
-      llamaBaseUrl: 'https://api.together.xyz/v1',
       pineconeEnabled: false,
       pineconeIndex: null,
       dropboxConfigured: false,
+      dropboxAuthMode: 'unconfigured',
       dropboxFolder: null,
     },
   });

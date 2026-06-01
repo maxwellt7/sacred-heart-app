@@ -193,9 +193,31 @@ export function createMessagesApi({ anthropicClient, openAiClient, geminiClient,
     return normalizeGeminiResponse(geminiResponse);
   };
 
-  const tryGemini = async (request, priorError) => {
-    if (!geminiClient) throw priorError;
-    return await callGemini(request);
+  // When every provider fails, throw a single error whose message names
+  // each underlying failure. Without this, the route only sees the last
+  // error in the chain (Gemini), which is misleading when the actual root
+  // cause is Anthropic being out of credits.
+  const composeAllProvidersError = (errors) => {
+    const parts = errors
+      .filter((e) => e && e.error)
+      .map(({ name, error }) => `${name}: ${error.message || String(error)}`);
+    const composed = new Error(`All LLM providers unavailable — ${parts.join(' | ')}`);
+    composed.providerErrors = errors.filter((e) => e && e.error);
+    return composed;
+  };
+
+  const tryGemini = async (request, priorErrors) => {
+    if (!geminiClient) {
+      throw composeAllProvidersError(priorErrors);
+    }
+    try {
+      return await callGemini(request);
+    } catch (geminiError) {
+      throw composeAllProvidersError([
+        ...priorErrors,
+        { name: 'gemini', error: geminiError },
+      ]);
+    }
   };
 
   return {
@@ -209,7 +231,8 @@ export function createMessagesApi({ anthropicClient, openAiClient, geminiClient,
           try {
             return await callOpenAi(request);
           } catch (openAiError) {
-            return await tryGemini(request, openAiError);
+            console.warn('[LLM] OpenAI failed, falling back to Gemini:', openAiError.message);
+            return await tryGemini(request, [{ name: 'openai', error: openAiError }]);
           }
         }
 
@@ -228,12 +251,16 @@ export function createMessagesApi({ anthropicClient, openAiClient, geminiClient,
             console.warn('[LLM] Anthropic unavailable, falling back to OpenAI:', error.message);
             return await callOpenAi(request);
           } catch (openAiError) {
-            return await tryGemini(request, openAiError);
+            console.warn('[LLM] OpenAI also failed, falling back to Gemini:', openAiError.message);
+            return await tryGemini(request, [
+              { name: 'anthropic', error },
+              { name: 'openai', error: openAiError },
+            ]);
           }
         }
 
         console.warn('[LLM] Anthropic unavailable, falling back to Gemini:', error.message);
-        return await tryGemini(request, error);
+        return await tryGemini(request, [{ name: 'anthropic', error }]);
       }
     },
   };

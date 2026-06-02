@@ -22,7 +22,7 @@ export function PatternCard({ name, definition, tipOff, examples, number }: Patt
           <Text style={styles.name}>{name}</Text>
           {definition ? <Text style={styles.definition}>{definition}</Text> : null}
           {tipOff ? <Text style={styles.tipOff}>Tip-off: {tipOff}</Text> : null}
-          {examples && examples.length > 0 ? (
+          {Array.isArray(examples) && examples.length > 0 ? (
             <View style={styles.examples}>
               {examples.slice(0, 5).map((ex, i) => (
                 <Text key={i} style={styles.example}>

@@ -94,7 +94,8 @@ function buildItems(category: string, data: any): PatternItem[] {
         });
       if (ql.metaModel?.categories) {
         for (const patterns of Object.values(ql.metaModel.categories)) {
-          (patterns as any[]).forEach((p: any) =>
+          if (!Array.isArray(patterns)) continue;
+          patterns.forEach((p: any) =>
             items.push({ name: p.name, definition: p.description, examples: [p.example, p.response].filter(Boolean) }),
           );
         }

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { api } from '../../src/services/api';
 import { useApiResource } from '../../src/hooks/useApiResource';
+import { dateKeyToDate } from '../../src/lib/date';
 import { ErrorState, LoadingState } from '../../src/ui/states';
 import { OfflineBanner } from '../../src/ui/OfflineBanner';
 import { XpBar } from '../../src/ui/XpBar';
@@ -326,10 +327,10 @@ export default function DashboardScreen() {
                 >
                   <View style={styles.sessionDate}>
                     <Text style={styles.sessionDay}>
-                      {new Date(`${s.date_key}T12:00:00`).toLocaleDateString('en', { day: 'numeric' })}
+                      {dateKeyToDate(s.date_key)?.toLocaleDateString('en', { day: 'numeric' }) ?? '–'}
                     </Text>
                     <Text style={styles.sessionMonth}>
-                      {new Date(`${s.date_key}T12:00:00`).toLocaleDateString('en', { month: 'short' })}
+                      {dateKeyToDate(s.date_key)?.toLocaleDateString('en', { month: 'short' }) ?? ''}
                     </Text>
                   </View>
                   <View style={styles.sessionBody}>

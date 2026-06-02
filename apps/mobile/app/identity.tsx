@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, T
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../src/services/api';
 import { useApiResource } from '../src/hooks/useApiResource';
+import { safeDate } from '../src/lib/date';
 import { ErrorState, LoadingState } from '../src/ui/states';
 import { OfflineBanner } from '../src/ui/OfflineBanner';
 import { colors, scoreColor } from '../src/ui/theme';
@@ -226,9 +227,11 @@ export default function IdentityScreen() {
                               {e.interpretation ? (
                                 <Text style={styles.evidenceInterp}>{e.interpretation}</Text>
                               ) : null}
-                              <Text style={styles.evidenceDate}>
-                                {new Date(e.detected_at).toLocaleDateString()}
-                              </Text>
+                              {safeDate(e.detected_at) ? (
+                                <Text style={styles.evidenceDate}>
+                                  {safeDate(e.detected_at)?.toLocaleDateString()}
+                                </Text>
+                              ) : null}
                             </View>
                           ))
                         )}

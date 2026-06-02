@@ -49,13 +49,14 @@ export function Quiz({ questions, onSubmit, results, loading }: Props) {
   };
 
   if (results) {
+    const resultRows = Array.isArray(results.results) ? results.results : [];
     return (
       <View style={styles.container}>
         <View style={styles.scoreCard}>
-          <Text style={styles.overallScore}>{results.overallScore}%</Text>
-          <Text style={styles.summary}>{results.summary}</Text>
+          <Text style={styles.overallScore}>{Number(results.overallScore) || 0}%</Text>
+          {results.summary ? <Text style={styles.summary}>{results.summary}</Text> : null}
         </View>
-        {results.results.map((r, i) => (
+        {resultRows.map((r, i) => (
           <View key={i} style={[styles.resultCard, r.correct ? styles.resultCorrect : styles.resultWrong]}>
             <Text style={styles.resultQuestion}>
               Q{i + 1}: {questionLabel(questions[i])}

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { api } from '../src/services/api';
 import { useApiResource } from '../src/hooks/useApiResource';
+import { dateKeyToDate } from '../src/lib/date';
 import { EmptyState, ErrorState, LoadingState } from '../src/ui/states';
 import { OfflineBanner } from '../src/ui/OfflineBanner';
 import { colors } from '../src/ui/theme';
@@ -36,11 +37,13 @@ function stateColor(state: string): string {
 }
 
 function monthLabel(dateKey: string): string {
-  return new Date(`${dateKey}T12:00:00`).toLocaleDateString('en', { month: 'short' });
+  const d = dateKeyToDate(dateKey);
+  return d ? d.toLocaleDateString('en', { month: 'short' }) : '—';
 }
 
 function dayLabel(dateKey: string): string {
-  return String(new Date(`${dateKey}T12:00:00`).getDate());
+  const d = dateKeyToDate(dateKey);
+  return d ? String(d.getDate()) : '–';
 }
 
 function ratingStars(rating: number | null): number {

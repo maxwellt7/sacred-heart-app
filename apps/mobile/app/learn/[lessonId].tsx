@@ -17,8 +17,8 @@ type LessonData = {
 };
 
 export default function LessonScreen() {
-  const params = useLocalSearchParams<{ lessonId: string }>();
-  const lessonId = params.lessonId;
+  const params = useLocalSearchParams<{ lessonId?: string | string[] }>();
+  const lessonId = Array.isArray(params.lessonId) ? params.lessonId[0] : params.lessonId;
   const { completeLesson } = useProgress();
 
   const [showQuiz, setShowQuiz] = useState(false);
@@ -28,7 +28,10 @@ export default function LessonScreen() {
   const [quizError, setQuizError] = useState<string | null>(null);
 
   const { data, loading, error, retry } = useApiResource<LessonData>(
-    () => api.getLesson(lessonId),
+    () => {
+      if (!lessonId) throw new Error('Lesson not found.');
+      return api.getLesson(lessonId);
+    },
     [lessonId],
   );
 

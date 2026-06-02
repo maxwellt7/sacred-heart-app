@@ -105,7 +105,10 @@ export default function DashboardScreen() {
     [],
   );
 
-  const goToSession = useCallback(() => router.push('/(tabs)/hypnosis'), [router]);
+  const goToSession = useCallback(
+    () => router.push({ pathname: '/(tabs)/hypnosis', params: { mode: 'daily' } }),
+    [router],
+  );
 
   if (loading) {
     return (

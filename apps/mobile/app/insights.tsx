@@ -32,6 +32,11 @@ const FORCE_ITEMS = [
   { key: 'clean', label: 'Clean Influence', desc: 'Creating conditions where people want to follow', color: '#10B981' },
 ];
 
+function num(value: unknown, fallback = 0): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
 function Bar({ value, color, height = 12 }: { value: number; color: string; height?: number }) {
   return (
     <View style={[styles.barTrack, { height }]}>
@@ -82,13 +87,13 @@ export default function InsightsScreen() {
     );
   }
 
-  const totalSessions = streak?.total_sessions || 0;
+  const totalSessions = num(streak?.total_sessions, 0);
   let stageIndex = 0;
   if (totalSessions >= 60) stageIndex = 3;
   else if (totalSessions >= 21) stageIndex = 2;
   else if (totalSessions >= 5) stageIndex = 1;
 
-  const victimScore = profile.victim_healer?.score || 0;
+  const victimScore = num(profile.victim_healer?.score, 0);
   const victimMarker = Math.max(2, Math.min(98, (victimScore + 5) * 10));
   const trending = profile.victim_healer?.trending;
   const congruence: [string, unknown][] = profile.congruence ? Object.entries(profile.congruence) : [];
@@ -135,7 +140,7 @@ export default function InsightsScreen() {
           <Text style={styles.cardTitle}>Emotional Capacity Spectrum</Text>
           <View style={styles.gap16}>
             {CAPACITY_ITEMS.map((item) => {
-              const val = profile.capacity_index?.[item.key] ?? 5;
+              const val = num(profile.capacity_index?.[item.key], 5);
               return (
                 <View key={item.key} style={styles.gap4}>
                   <View style={styles.spaceBetween}>
@@ -161,7 +166,7 @@ export default function InsightsScreen() {
           <Text style={styles.cardTitle}>Context Maps Health</Text>
           <View style={styles.mapGrid}>
             {CONTEXT_MAPS.map((map) => {
-              const val = profile.context_maps?.[map.key] ?? 5;
+              const val = num(profile.context_maps?.[map.key], 5);
               return (
                 <View key={map.key} style={styles.mapCard}>
                   <Text style={styles.mapIcon}>{map.icon}</Text>
@@ -201,7 +206,7 @@ export default function InsightsScreen() {
           <Text style={styles.cardTitle}>Force vs. Clean Influence</Text>
           <View style={styles.gap16}>
             {FORCE_ITEMS.map((item) => {
-              const val = profile.force_audit?.[item.key] ?? 5;
+              const val = num(profile.force_audit?.[item.key], 5);
               return (
                 <View key={item.key} style={styles.gap4}>
                   <View style={styles.spaceBetween}>
@@ -221,7 +226,7 @@ export default function InsightsScreen() {
             <Text style={styles.cardTitle}>Life Congruence</Text>
             <View style={styles.congruenceGrid}>
               {congruence.map(([domain, score]) => {
-                const val = Number(score);
+                const val = num(score, 0);
                 return (
                   <View key={domain} style={styles.congruenceItem}>
                     <View style={styles.congruenceCircle}>

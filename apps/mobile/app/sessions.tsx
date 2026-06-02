@@ -43,6 +43,10 @@ function dayLabel(dateKey: string): string {
   return String(new Date(`${dateKey}T12:00:00`).getDate());
 }
 
+function ratingStars(rating: number | null): number {
+  return Math.max(0, Math.min(5, Math.floor(Number(rating) || 0)));
+}
+
 export default function SessionsScreen() {
   const router = useRouter();
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -95,8 +99,8 @@ export default function SessionsScreen() {
                       #{theme}
                     </Text>
                   ))}
-                  {item.user_rating ? (
-                    <Text style={styles.rating}>{'★'.repeat(item.user_rating)}</Text>
+                  {ratingStars(item.user_rating) ? (
+                    <Text style={styles.rating}>{'★'.repeat(ratingStars(item.user_rating))}</Text>
                   ) : null}
                   {item.audio_file ? <Text style={styles.audioTag}>Audio</Text> : null}
                 </View>
@@ -170,7 +174,6 @@ export default function SessionsScreen() {
           initialNumToRender={8}
           maxToRenderPerBatch={10}
           windowSize={7}
-          removeClippedSubviews
         />
       )}
     </SafeAreaView>

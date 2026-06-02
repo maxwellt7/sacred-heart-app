@@ -74,13 +74,13 @@ function buildItems(category: string, data: any): PatternItem[] {
       if (ql.inductiveDeductive) {
         items.push({
           name: 'Deduction',
-          definition: ql.inductiveDeductive.deduction.definition,
-          examples: [ql.inductiveDeductive.deduction.example],
+          definition: ql.inductiveDeductive.deduction?.definition,
+          examples: [ql.inductiveDeductive.deduction?.example].filter(Boolean),
         });
         items.push({
           name: 'Induction',
-          definition: ql.inductiveDeductive.induction.definition,
-          examples: [ql.inductiveDeductive.induction.example],
+          definition: ql.inductiveDeductive.induction?.definition,
+          examples: [ql.inductiveDeductive.induction?.example].filter(Boolean),
         });
       }
       if (ql.hierarchyOfIdeas)

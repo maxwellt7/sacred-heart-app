@@ -3,11 +3,14 @@ import { Audio, type AVPlaybackStatus } from 'expo-av';
 
 /**
  * Single-track audio player. Only one sound plays at a time; toggling the
- * currently-playing track stops it. Sound resources are always unloaded on
- * stop and on unmount to avoid leaks.
+ * currently-playing track stops it. Each toggle is assigned a monotonically
+ * increasing token so a load that resolves after a newer toggle (or after
+ * unmount) is discarded and unloaded immediately, preventing orphaned sounds.
  */
 export function useAudioPlayer() {
   const soundRef = useRef<Audio.Sound | null>(null);
+  const tokenRef = useRef(0);
+  const mountedRef = useRef(true);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,24 +27,34 @@ export function useAudioPlayer() {
   }, []);
 
   const stop = useCallback(async () => {
+    tokenRef.current += 1; // cancel any in-flight load
     await unload();
-    setPlayingId(null);
+    if (mountedRef.current) setPlayingId(null);
   }, [unload]);
 
   const toggle = useCallback(
     async (id: string, uri: string) => {
-      setError(null);
+      if (mountedRef.current) setError(null);
       if (playingId === id) {
         await stop();
         return;
       }
+      const token = (tokenRef.current += 1);
       await unload();
       try {
         await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
         const { sound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: true });
+
+        // A newer toggle/stop happened, or we unmounted, while loading.
+        if (!mountedRef.current || token !== tokenRef.current) {
+          sound.unloadAsync().catch(() => undefined);
+          return;
+        }
+
         soundRef.current = sound;
         setPlayingId(id);
         sound.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
+          if (token !== tokenRef.current || !mountedRef.current) return;
           if (!status.isLoaded) {
             if (status.error) {
               setError('Failed to play audio');
@@ -51,19 +64,24 @@ export function useAudioPlayer() {
           }
           if (status.didJustFinish) {
             unload().catch(() => undefined);
-            setPlayingId(null);
+            if (mountedRef.current) setPlayingId(null);
           }
         });
       } catch {
-        setError('Failed to play audio');
-        setPlayingId(null);
+        if (mountedRef.current && token === tokenRef.current) {
+          setError('Failed to play audio');
+          setPlayingId(null);
+        }
       }
     },
     [playingId, stop, unload],
   );
 
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
+      mountedRef.current = false;
+      tokenRef.current += 1;
       unload().catch(() => undefined);
     };
   }, [unload]);

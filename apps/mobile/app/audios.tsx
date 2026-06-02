@@ -66,6 +66,14 @@ export default function AudiosScreen() {
 
   const { playingId, error: playError, toggle, stop, clearError } = useAudioPlayer();
   const resumeCheckedRef = useRef(false);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const loadScripts = useCallback(async (): Promise<SavedScript[]> => {
     const data = await api.listScripts();
@@ -98,10 +106,11 @@ export default function AudiosScreen() {
     resumeCheckedRef.current = true;
     const pending = loaded.filter((s) => !s.audioFile);
     for (const script of pending) {
+      if (!mountedRef.current) return;
       try {
         const active = await api.audioGetActiveJob(script.id);
         if (active?.jobId) {
-          setGenerating({ scriptId: script.id, jobId: active.jobId });
+          if (mountedRef.current) setGenerating({ scriptId: script.id, jobId: active.jobId });
           return;
         }
       } catch {

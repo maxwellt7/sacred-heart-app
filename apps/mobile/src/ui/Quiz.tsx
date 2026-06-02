@@ -28,7 +28,8 @@ type Props = {
   loading: boolean;
 };
 
-function questionLabel(q: QuizQuestion): string {
+function questionLabel(q?: QuizQuestion): string {
+  if (!q) return '';
   return q.question || q.prompt || q.scenario || '';
 }
 

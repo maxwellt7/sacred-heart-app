@@ -138,7 +138,7 @@ export default function IdentityScreen() {
             <Text style={styles.sectionTitle}>Identity Score</Text>
             <View style={styles.scoreGrid}>
               {SCORE_DIMS.map((dim) => {
-                const value = scores[dim.key] ?? 0;
+                const value = Number(scores[dim.key]) || 0;
                 return (
                   <View key={dim.key} style={styles.scoreCard}>
                     <Text style={styles.scoreLabel}>{dim.label}</Text>
@@ -189,11 +189,13 @@ export default function IdentityScreen() {
                         </View>
                       </View>
                       <View style={styles.valueStats}>
-                        <Text style={styles.valueStat}>Confidence: {(v.confidence * 100).toFixed(0)}%</Text>
-                        <Text style={[styles.valueStat, { color: scoreColor(v.purity_score) }]}>
-                          Purity: {v.purity_score.toFixed(1)}/10
+                        <Text style={styles.valueStat}>
+                          Confidence: {((Number(v.confidence) || 0) * 100).toFixed(0)}%
                         </Text>
-                        <Text style={styles.valueStat}>{v.evidence_count} evidence</Text>
+                        <Text style={[styles.valueStat, { color: scoreColor(Number(v.purity_score) || 0) }]}>
+                          Purity: {(Number(v.purity_score) || 0).toFixed(1)}/10
+                        </Text>
+                        <Text style={styles.valueStat}>{Number(v.evidence_count) || 0} evidence</Text>
                       </View>
                       {v.pure_expression ? (
                         <Text style={styles.pureExpr}>
@@ -269,7 +271,7 @@ export default function IdentityScreen() {
                     <View key={i} style={[styles.statementCard, { borderLeftColor: color }]}>
                       <Text style={styles.statementText}>&ldquo;{s.content}&rdquo;</Text>
                       <Text style={styles.statementConfidence}>
-                        Confidence: {(s.confidence * 100).toFixed(0)}%
+                        Confidence: {((Number(s.confidence) || 0) * 100).toFixed(0)}%
                       </Text>
                     </View>
                   ))}

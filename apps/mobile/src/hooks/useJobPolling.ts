@@ -25,6 +25,7 @@ export function useJobPolling<R>(
   handlers: Handlers<R>,
   intervalMs = 3500,
   errorMs = 6000,
+  maxDurationMs = 6 * 60 * 1000,
 ) {
   const handlersRef = useRef(handlers);
   handlersRef.current = handlers;
@@ -38,9 +39,17 @@ export function useJobPolling<R>(
     let terminal = false;
     let inFlight = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
+    const startedAt = Date.now();
 
     const poll = async () => {
       if (cancelled || inFlight || terminal) return;
+      // Give up on jobs that never reach a terminal state so the UI can't be
+      // pinned to a loading state indefinitely.
+      if (Date.now() - startedAt > maxDurationMs) {
+        terminal = true;
+        handlersRef.current.onFailed('This is taking longer than expected. Please try again.');
+        return;
+      }
       inFlight = true;
       try {
         const result = await fetchRef.current(jobId);
@@ -79,5 +88,5 @@ export function useJobPolling<R>(
       if (timer) clearTimeout(timer);
       subscription.remove();
     };
-  }, [jobId, intervalMs, errorMs]);
+  }, [jobId, intervalMs, errorMs, maxDurationMs]);
 }

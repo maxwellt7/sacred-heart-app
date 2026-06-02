@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  AppState,
   FlatList,
   Pressable,
   RefreshControl,
@@ -14,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { api } from '../src/services/api';
 import { useAudioPlayer } from '../src/hooks/useAudioPlayer';
+import { useJobPolling } from '../src/hooks/useJobPolling';
 import { EmptyState, ErrorState, InlineError, LoadingState } from '../src/ui/states';
 import { OfflineBanner } from '../src/ui/OfflineBanner';
 import { colors } from '../src/ui/theme';
@@ -147,56 +147,25 @@ export default function AudiosScreen() {
     }
   }, [loadScripts, loadVoices]);
 
-  // Generation polling: server owns the work, we only track a jobId. Polling
-  // pauses while backgrounded and resumes immediately on foreground.
-  useEffect(() => {
-    if (!generating) return;
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    let inFlight = false;
-
-    const poll = async () => {
-      if (cancelled || inFlight) return;
-      inFlight = true;
-      try {
-        const result = await api.audioGenerateStatus(generating.jobId);
-        if (cancelled) return;
-        if (result.status === 'complete') {
-          await loadScripts();
-          if (!cancelled) setGenerating(null);
-          return;
-        }
-        if (result.status === 'failed') {
-          setError(result.error || 'Audio generation failed');
-          setGenerating(null);
-          return;
-        }
-        timer = setTimeout(poll, 4000);
-      } catch {
-        if (!cancelled) timer = setTimeout(poll, 7000);
-      } finally {
-        inFlight = false;
-      }
-    };
-
-    poll().catch(() => undefined);
-
-    const subscription = AppState.addEventListener('change', (next) => {
-      if (next === 'active') {
-        if (timer) {
-          clearTimeout(timer);
-          timer = null;
-        }
-        poll().catch(() => undefined);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-      if (timer) clearTimeout(timer);
-      subscription.remove();
-    };
-  }, [generating, loadScripts]);
+  // Generation polling: server owns the work, we only track a jobId. The shared
+  // hook pauses while backgrounded, resumes on foreground, and caps total
+  // duration so a stuck render can't pin the row to "Generating" forever.
+  useJobPolling(
+    generating?.jobId ?? null,
+    (id) => api.audioGenerateStatus(id),
+    {
+      onComplete: async () => {
+        await loadScripts();
+        setGenerating(null);
+      },
+      onFailed: (err) => {
+        setError(err || 'Audio generation failed');
+        setGenerating(null);
+      },
+    },
+    4000,
+    7000,
+  );
 
   const startGenerate = useCallback(
     async (scriptId: string) => {
@@ -204,6 +173,9 @@ export default function AudiosScreen() {
       try {
         const voiceId = selectedVoiceByScript[scriptId];
         const started = await api.audioGenerateStart(scriptId, undefined, undefined, voiceId);
+        if (!started?.jobId) {
+          throw new Error('Audio generation did not start. Please try again.');
+        }
         setGenerating({ scriptId, jobId: started.jobId });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to start audio generation');

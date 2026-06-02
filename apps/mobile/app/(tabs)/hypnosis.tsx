@@ -426,6 +426,9 @@ export default function HypnosisScreen() {
     try {
       const apiMessages = messages.map((m) => ({ role: m.role, content: m.content }));
       const r = await api.hypnosisGenerateStart(apiMessages, selectedSession.id);
+      if (!r?.jobId) {
+        throw new Error('Generation did not start. Please try again.');
+      }
       setGenerationJobId(r.jobId);
       writeStored(jobKey(selectedSession.id), r.jobId);
     } catch (err) {
@@ -497,6 +500,9 @@ export default function HypnosisScreen() {
         selectedMusic ? musicVolume : undefined,
         selectedVoice || undefined,
       );
+      if (!r?.jobId) {
+        throw new Error('Audio generation did not start. Please try again.');
+      }
       setAudioJobId(r.jobId);
       writeStored(audioJobKey(savedScriptId), r.jobId);
     } catch (err) {

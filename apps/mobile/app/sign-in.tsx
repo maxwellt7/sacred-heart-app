@@ -4,6 +4,7 @@ import { useSSO } from '@clerk/clerk-expo';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { Screen } from '../src/ui/Screen';
+import { webRoutes } from '../src/config/env';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -52,7 +53,7 @@ export default function SignInScreen() {
 
       <View style={styles.helperRow}>
         <Text style={styles.helperText}>Need account setup on web first?</Text>
-        <Pressable onPress={() => Linking.openURL('https://heart.sovereignty.app/sign-up')}>
+        <Pressable onPress={() => Linking.openURL(webRoutes.signUp)}>
           <Text style={styles.linkText}>Open sign-up</Text>
         </Pressable>
       </View>

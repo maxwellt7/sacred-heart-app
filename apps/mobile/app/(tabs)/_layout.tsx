@@ -58,8 +58,9 @@ function TabsNavigator() {
 
 function AccessGate() {
   const { user } = useUser();
-  const primaryEmail = user?.emailAddresses?.[0]?.emailAddress ?? null;
-  const { loading, hasAccess, openPurchase, refresh } = useAccessGate({
+  const primaryEmail =
+    user?.primaryEmailAddress?.emailAddress ?? user?.emailAddresses?.[0]?.emailAddress ?? null;
+  const { loading, hasAccess, error, openPurchase, refresh } = useAccessGate({
     userId: user?.id,
     email: primaryEmail,
   });
@@ -73,6 +74,20 @@ function AccessGate() {
   }
 
   if (!hasAccess) {
+    // Distinguish "couldn't verify" (transient/offline) from "not entitled" so
+    // a paying user on a flaky connection isn't told to buy again.
+    if (error) {
+      return (
+        <View style={styles.centered}>
+          <Text style={styles.title}>Access Unavailable</Text>
+          <Text style={styles.copy}>{error}</Text>
+          <Pressable style={styles.primaryButton} onPress={() => refresh(true)}>
+            <Text style={styles.primaryButtonText}>Retry</Text>
+          </Pressable>
+        </View>
+      );
+    }
+
     return (
       <View style={styles.centered}>
         <Text style={styles.title}>Upgrade Required</Text>
@@ -82,7 +97,7 @@ function AccessGate() {
         <Pressable style={styles.primaryButton} onPress={openPurchase}>
           <Text style={styles.primaryButtonText}>Open Checkout</Text>
         </Pressable>
-        <Pressable style={styles.secondaryButton} onPress={refresh}>
+        <Pressable style={styles.secondaryButton} onPress={() => refresh(true)}>
           <Text style={styles.secondaryButtonText}>I upgraded, refresh access</Text>
         </Pressable>
       </View>

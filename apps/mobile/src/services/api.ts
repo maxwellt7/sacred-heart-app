@@ -1,5 +1,6 @@
 import { getCalendars } from 'expo-localization';
 import { env } from '../config/env';
+import { fetchWithTimeout } from '../lib/http';
 
 const BASE = `${env.apiUrl.replace(/\/$/, '')}/api`;
 
@@ -47,7 +48,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     }
   }
 
-  const response = await fetch(`${BASE}${path}`, {
+  const response = await fetchWithTimeout(`${BASE}${path}`, {
     ...options,
     headers,
   });

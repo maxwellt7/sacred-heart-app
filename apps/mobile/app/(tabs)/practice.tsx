@@ -143,7 +143,7 @@ export default function PracticeScreen() {
       setDebrief(result.debrief || result);
       recordPracticeSession(scenario);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate debrief. Your session was still recorded.');
+      setError(err instanceof Error ? err.message : 'Failed to generate debrief. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -254,6 +254,8 @@ export default function PracticeScreen() {
               onValueChange={setCoached}
               trackColor={{ true: colors.info, false: colors.border }}
               thumbColor="#FFFFFF"
+              accessibilityRole="switch"
+              accessibilityLabel="Real-time coaching"
             />
             <Text style={styles.coachLabel}>Real-time coaching</Text>
           </View>

@@ -719,7 +719,13 @@ export default function HypnosisScreen() {
                   <Text style={styles.ratingLabel}>Rate this session</Text>
                   <View style={styles.ratingRow}>
                     {[1, 2, 3, 4, 5].map((value) => (
-                      <Pressable key={value} onPress={() => setSessionRating(value)} hitSlop={4}>
+                      <Pressable
+                        key={value}
+                        onPress={() => setSessionRating(value)}
+                        hitSlop={10}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Rate ${value} star${value === 1 ? '' : 's'}`}
+                      >
                         <Text style={[styles.star, value <= sessionRating ? styles.starOn : styles.starOff]}>★</Text>
                       </Pressable>
                     ))}

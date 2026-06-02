@@ -3,7 +3,7 @@ import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../src/services/api';
 import { useApiResource } from '../src/hooks/useApiResource';
-import { EmptyState, ErrorState, LoadingState } from '../src/ui/states';
+import { EmptyState, ErrorState, InlineError, LoadingState } from '../src/ui/states';
 import { OfflineBanner } from '../src/ui/OfflineBanner';
 import { PatternCard, type PatternItem } from '../src/ui/PatternCard';
 import { colors } from '../src/ui/theme';
@@ -199,6 +199,7 @@ export default function ReferenceScreen() {
         ListHeaderComponent={
           <View style={styles.header}>
             <Text style={styles.title}>Reference</Text>
+            {error ? <InlineError message={error} onRetry={retry} /> : null}
             <TextInput
               style={styles.search}
               value={search}

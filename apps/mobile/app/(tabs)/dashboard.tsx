@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { api } from '../../src/services/api';
 import { useApiResource } from '../../src/hooks/useApiResource';
 import { dateKeyToDate } from '../../src/lib/date';
-import { ErrorState, LoadingState } from '../../src/ui/states';
+import { ErrorState, InlineError, LoadingState } from '../../src/ui/states';
 import { OfflineBanner } from '../../src/ui/OfflineBanner';
 import { XpBar } from '../../src/ui/XpBar';
 import { MysteryBox } from '../../src/ui/MysteryBox';
@@ -154,6 +154,7 @@ export default function DashboardScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.accent} />}
       >
+        {error ? <InlineError message={error} onRetry={retry} /> : null}
         <View style={styles.hero}>
           <Text style={styles.heroDate}>
             {new Date().toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' })}

@@ -112,10 +112,12 @@ export function MysteryBox({ box, onOpened }: { box: RawBox; onOpened?: (opened:
     normalized.reward_content ? parseRewardContent(normalized.reward_content) : null,
   );
   const [rewardTitle, setRewardTitle] = useState(normalized.reward_title);
+  const [openError, setOpenError] = useState(false);
 
   const handleOpen = async () => {
     if (opening || revealed) return;
     setOpening(true);
+    setOpenError(false);
     try {
       const result = normalizeBox(await api.openMysteryBox(normalized.id));
       setRevealed(true);
@@ -123,6 +125,7 @@ export function MysteryBox({ box, onOpened }: { box: RawBox; onOpened?: (opened:
       setRewardContent(result.reward_content ? parseRewardContent(result.reward_content) : null);
       onOpened?.(result);
     } catch {
+      setOpenError(true);
       setOpening(false);
     }
   };
@@ -145,7 +148,7 @@ export function MysteryBox({ box, onOpened }: { box: RawBox; onOpened?: (opened:
           {opening ? (
             <ActivityIndicator color={config.color} size="small" />
           ) : (
-            <Text style={styles.tapHint}>Tap to decrypt</Text>
+            <Text style={styles.tapHint}>{openError ? 'Failed — tap to retry' : 'Tap to decrypt'}</Text>
           )}
         </View>
       </Pressable>

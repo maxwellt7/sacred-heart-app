@@ -22,6 +22,9 @@ export default function SignInScreen() {
       if (result.createdSessionId) {
         await result.setActive?.({ session: result.createdSessionId });
         router.replace('/(tabs)/dashboard');
+      } else {
+        // Flow returned without a session (cancelled, or needs more steps).
+        setError('Sign-in was not completed. Please try again.');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign-in failed');
@@ -38,6 +41,9 @@ export default function SignInScreen() {
       <Pressable
         onPress={handleGoogleSignIn}
         disabled={submitting}
+        accessibilityRole="button"
+        accessibilityLabel="Continue with Google"
+        accessibilityState={{ disabled: submitting, busy: submitting }}
         style={({ pressed }) => [
           styles.primaryButton,
           pressed && styles.buttonPressed,

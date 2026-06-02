@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { api } from '../src/services/api';
 import { useApiResource } from '../src/hooks/useApiResource';
 import { dateKeyToDate } from '../src/lib/date';
-import { EmptyState, ErrorState, LoadingState } from '../src/ui/states';
+import { EmptyState, ErrorState, InlineError, LoadingState } from '../src/ui/states';
 import { OfflineBanner } from '../src/ui/OfflineBanner';
 import { colors } from '../src/ui/theme';
 
@@ -167,7 +167,12 @@ export default function SessionsScreen() {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.accent} />
           }
-          ListHeaderComponent={<Text style={styles.heading}>Session History</Text>}
+          ListHeaderComponent={
+            <View>
+              <Text style={styles.heading}>Session History</Text>
+              {error ? <InlineError message={error} onRetry={retry} /> : null}
+            </View>
+          }
           ListEmptyComponent={
             <EmptyState
               title="No sessions yet"

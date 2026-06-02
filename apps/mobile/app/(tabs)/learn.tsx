@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { api } from '../../src/services/api';
 import { useApiResource } from '../../src/hooks/useApiResource';
 import { useProgress } from '../../src/hooks/useProgress';
-import { EmptyState, ErrorState, LoadingState } from '../../src/ui/states';
+import { EmptyState, ErrorState, InlineError, LoadingState } from '../../src/ui/states';
 import { OfflineBanner } from '../../src/ui/OfflineBanner';
 import { colors } from '../../src/ui/theme';
 
@@ -59,6 +59,7 @@ export default function LearnScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.accent} />}
       >
         <Text style={styles.title}>Learn NLP</Text>
+        {error ? <InlineError message={error} onRetry={retry} /> : null}
         {modules.length === 0 ? (
           <EmptyState title="No curriculum yet" message="Check back soon for lessons." />
         ) : (

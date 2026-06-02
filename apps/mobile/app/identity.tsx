@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../src/services/api';
 import { useApiResource } from '../src/hooks/useApiResource';
 import { safeDate } from '../src/lib/date';
-import { ErrorState, LoadingState } from '../src/ui/states';
+import { ErrorState, InlineError, LoadingState } from '../src/ui/states';
 import { OfflineBanner } from '../src/ui/OfflineBanner';
 import { colors, scoreColor } from '../src/ui/theme';
 
@@ -133,6 +133,8 @@ export default function IdentityScreen() {
             ? 'Your value hierarchy and identity profile, built from daily conversations.'
             : 'Start a coaching session to begin building your identity profile.'}
         </Text>
+
+        {error ? <InlineError message={error} onRetry={retry} /> : null}
 
         {hasData && scores ? (
           <View style={styles.section}>

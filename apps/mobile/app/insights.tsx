@@ -2,7 +2,7 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../src/services/api';
 import { useApiResource } from '../src/hooks/useApiResource';
-import { EmptyState, ErrorState, LoadingState } from '../src/ui/states';
+import { EmptyState, ErrorState, InlineError, LoadingState } from '../src/ui/states';
 import { OfflineBanner } from '../src/ui/OfflineBanner';
 import { colors } from '../src/ui/theme';
 
@@ -107,6 +107,8 @@ export default function InsightsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.accent} />}
       >
         <Text style={styles.title}>Your Insights</Text>
+
+        {error ? <InlineError message={error} onRetry={retry} /> : null}
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Four Stages of Competence</Text>

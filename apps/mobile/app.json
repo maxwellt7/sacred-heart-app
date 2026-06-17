@@ -16,7 +16,7 @@
     "userInterfaceStyle": "dark",
     "scheme": "sacredheart",
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "app.sovereignty.sacredheart"
     },
     "android": {
